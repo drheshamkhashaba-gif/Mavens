@@ -1,0 +1,98 @@
+name: Prepare intake database
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/prepare-intake-db.yml']
+permissions:
+  contents: read
+concurrency:
+  group: mavens-intake-migration
+  cancel-in-progress: false
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Discover DB, apply additive intake schema, verify
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, os, re, sqlite3, urllib.request, urllib.error
+          SQL = "-- Run once on the existing D1 database before deploying this release.\nCREATE TABLE IF NOT EXISTS intake_assessments (\n patient_id TEXT PRIMARY KEY REFERENCES patients(id), tenant_id TEXT NOT NULL, clinic_id TEXT NOT NULL,\n data_json TEXT NOT NULL, version INTEGER NOT NULL DEFAULT 1, updated_at TEXT NOT NULL, updated_by TEXT NOT NULL\n);\nCREATE TABLE IF NOT EXISTS intake_documents (\n id TEXT PRIMARY KEY, patient_id TEXT NOT NULL REFERENCES patients(id), tenant_id TEXT NOT NULL, clinic_id TEXT NOT NULL,\n kind TEXT NOT NULL, view_type TEXT NOT NULL, filename TEXT NOT NULL, mime TEXT NOT NULL, size INTEGER NOT NULL,\n created_at TEXT NOT NULL, created_by TEXT NOT NULL\n);\nCREATE INDEX IF NOT EXISTS intake_documents_patient ON intake_documents(tenant_id,clinic_id,patient_id);\nCREATE TABLE IF NOT EXISTS intake_document_chunks (\n document_id TEXT NOT NULL REFERENCES intake_documents(id) ON DELETE CASCADE,\n ordinal INTEGER NOT NULL, bytes BLOB NOT NULL, PRIMARY KEY(document_id,ordinal)\n);\n"
+          token = os.environ.get("CLOUDFLARE_API_TOKEN", "").strip()
+          if not token or re.search(r"\s", token):
+              raise SystemExit("API token must be present and contain no whitespace")
+          account = "d5ee303013f22cfb7b3b33c8f7bbecc5"
+          def api(path, body=None):
+              payload = None if body is None else json.dumps(body).encode()
+              req = urllib.request.Request("https://api.cloudflare.com/client/v4" + path, data=payload,
+                  headers={"Authorization": "Bearer " + token, "Content-Type": "application/json"})
+              try:
+                  with urllib.request.urlopen(req, timeout=60) as response:
+                      data = json.load(response)
+              except urllib.error.HTTPError as error:
+                  raise SystemExit("Cloudflare HTTP " + str(error.code) + " at " + path)
+              except (urllib.error.URLError, ValueError):
+                  raise SystemExit("Cloudflare request failed; credentials were not logged")
+              if not data.get("success"):
+                  raise SystemExit("Cloudflare rejected request at " + path)
+              return data["result"]
+          settings = api("/accounts/" + account + "/workers/scripts/mavens/settings")
+          bindings = [b for b in settings.get("bindings", []) if b.get("type") == "d1" and b.get("name") == "DB"]
+          if len(bindings) != 1:
+              raise SystemExit("Expected exactly one D1 binding named DB on mavens")
+          database_id = bindings[0].get("id") or bindings[0].get("database_id")
+          if not database_id:
+              raise SystemExit("Database ID missing")
+          base = "/accounts/" + account + "/d1/database/" + database_id
+          metadata = api(base)
+          def query(sql):
+              result = api(base + "/query", {"sql": sql, "params": []})
+              if not result or any(not item.get("success") for item in result):
+                  raise SystemExit("D1 query failed")
+              return result[0].get("results", [])
+          expected = sqlite3.connect(":memory:")
+          expected.row_factory = sqlite3.Row
+          expected.execute("CREATE TABLE patients (id TEXT PRIMARY KEY)")
+          expected.executescript(SQL)
+          tables = ["intake_assessments", "intake_documents", "intake_document_chunks"]
+          def signature(rows):
+              return [(r["name"], r["type"].upper(), r["notnull"], r["dflt_value"], r["pk"]) for r in rows]
+          def check_table(name, required):
+              rows = query("PRAGMA table_info(" + name + ")")
+              target = list(expected.execute("PRAGMA table_info(" + name + ")"))
+              if (required or rows) and signature(rows) != signature(target):
+                  raise SystemExit("Unexpected schema for " + name + "; stopped without changing existing tables")
+              if rows:
+                  actual_fk = query("PRAGMA foreign_key_list(" + name + ")")
+                  target_fk = [dict(r) for r in expected.execute("PRAGMA foreign_key_list(" + name + ")")]
+                  if actual_fk != target_fk:
+                      raise SystemExit("Unexpected foreign key configuration for " + name)
+          patients = query("PRAGMA table_info(patients)")
+          if not any(r["name"] == "id" and r["pk"] for r in patients):
+              raise SystemExit("Expected existing patients primary key not found")
+          for name in tables:
+              check_table(name, False)
+          index_rows = query("PRAGMA index_info(intake_documents_patient)")
+          if index_rows and [r["name"] for r in index_rows] != ["tenant_id", "clinic_id", "patient_id"]:
+              raise SystemExit("Existing intake index differs; stopped")
+          # Only fixed, additive CREATE statements from the reviewed migration.
+          for statement in SQL.split(";"):
+              statement = re.sub(r"--[^\n]*", "", statement).strip()
+              if statement:
+                  if not re.match(r"^CREATE (TABLE|INDEX) IF NOT EXISTS ", statement):
+                      raise SystemExit("Non-additive SQL rejected")
+                  query(statement)
+          for name in tables:
+              check_table(name, True)
+          if [r["name"] for r in query("PRAGMA index_info(intake_documents_patient)")] != ["tenant_id", "clinic_id", "patient_id"]:
+              raise SystemExit("Index verification failed")
+          message = "Intake schema verified on mavens / DB. Three tables and one index are ready. No patient records were read or modified."
+          print(message)
+          print("Database ID: " + database_id)
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as report:
+              report.write("## Intake migration completed\n\n" + message + "\n")
+          PY

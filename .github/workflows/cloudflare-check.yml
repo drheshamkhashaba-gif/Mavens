@@ -1,0 +1,52 @@
+name: Check Cloudflare connection
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Verify token and discover Worker database binding (read only)
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: d5ee303013f22cfb7b3b33c8f7bbecc5
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json, os, urllib.request, urllib.error
+          token = os.environ.get("CLOUDFLARE_API_TOKEN", "").strip()
+          if not token:
+              raise SystemExit("Missing repository secret CLOUDFLARE_API_TOKEN")
+          def get(path):
+              req = urllib.request.Request("https://api.cloudflare.com/client/v4" + path,
+                  headers={"Authorization": "Bearer " + token, "Accept": "application/json"})
+              try:
+                  with urllib.request.urlopen(req, timeout=30) as response:
+                      data = json.load(response)
+              except urllib.error.HTTPError as error:
+                  raise SystemExit("Cloudflare request failed: HTTP " + str(error.code))
+              if not data.get("success"):
+                  raise SystemExit("Cloudflare reported an unsuccessful request")
+              return data["result"]
+          result = get("/user/tokens/verify")
+          if result.get("status") != "active":
+              raise SystemExit("Token is not active")
+          account = os.environ["CLOUDFLARE_ACCOUNT_ID"]
+          settings = get("/accounts/" + account + "/workers/scripts/mavens/settings")
+          bindings = [b for b in settings.get("bindings", []) if b.get("type") == "d1"]
+          if not bindings:
+              raise SystemExit("No D1 binding found on mavens")
+          lines = ["## Cloudflare connection verified", "", "Worker: mavens", "", "D1 bindings:"]
+          for binding in bindings:
+              database_id = binding.get("id") or binding.get("database_id")
+              if not database_id:
+                  raise SystemExit("D1 binding is missing its database ID")
+              database = get("/accounts/" + account + "/d1/database/" + database_id)
+              lines.append("- " + str(binding.get("name")) + ": " + str(database.get("name")) + " (" + database_id + ")")
+          lines += ["", "Read-only verification. No SQL was executed and no deployment was performed."]
+          with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as report:
+              report.write("\n".join(lines) + "\n")
+          print("Token active; Worker settings and bound D1 database accessible.")
+          PY

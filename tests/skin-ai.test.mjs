@@ -47,3 +47,12 @@ test('patient reads deny unlinked identities and cross-clinic roles; staff previ
  assert.equal((await patientApi.GET(homeRequest(null,'foreign'))).status,404);
  globalThis.ctx={error:'AUTHENTICATION_REQUIRED',status:401};assert.equal((await patientApi.GET(homeRequest())).status,401);
  }finally{s.close()}});
+
+test('self-link requires scoped admin, preserves roles and refuses another owner or existing link',async()=>{
+ let source=readFileSync('app/api/admin/actions/route.ts','utf8').replace(/import .* from .*;\n/g,'');source="const NextResponse={json:(b,i)=>Response.json(b,i)};const requireOperationalContext=()=>globalThis.ctx;const operationalRole=r=>r.some(x=>['clinic_admin','reception'].includes(x));\n"+source;
+ const admin=await import(uri(source));const s=homeSetup();s.exec("ALTER TABLE patients ADD COLUMN updated_at TEXT;UPDATE patients SET profile_id=NULL WHERE id='p';UPDATE role_assignments SET role='clinic_admin' WHERE clinic_id='c';");globalThis.ctx.roles=['clinic_admin'];
+ const link=(patientId='p',origin='https://local')=>admin.POST(new Request('https://local/api/admin/actions',{method:'POST',headers:{origin},body:JSON.stringify({action:'link_own_patient',patientId})}));
+ try{assert.equal((await link('p','https://foreign')).status,403);assert.equal((await link('foreign')).status,404);s.exec("UPDATE patients SET profile_id='someone-else' WHERE id='p'");assert.equal((await link()).status,409);s.exec("UPDATE patients SET profile_id=NULL WHERE id='p';UPDATE role_assignments SET role='reception' WHERE clinic_id='c'");assert.equal((await link()).status,403);s.exec("UPDATE role_assignments SET role='clinic_admin' WHERE clinic_id='c'");assert.equal((await link()).status,200);assert.equal(s.prepare("SELECT profile_id FROM patients WHERE id='p'").get().profile_id,'u');assert.equal(s.prepare("SELECT role FROM role_assignments WHERE clinic_id='c'").get().role,'clinic_admin');assert.equal(s.prepare("SELECT COUNT(*) n FROM audit_logs WHERE action='self_account_linked'").get().n,1);
+ s.exec("INSERT INTO patients(id,tenant_id,clinic_id,profile_id) VALUES('second-own','t','c',NULL)");assert.equal((await link('second-own')).status,409);
+ }finally{s.close()}
+});

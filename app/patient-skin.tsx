@@ -14,7 +14,7 @@ async function compactPhoto(file:Blob):Promise<File>{
 export default function PatientSkin({patientId,arabic,preview}:{patientId:string;arabic:boolean;preview?:boolean}){
  const t=(ar:string,en:string)=>arabic?ar:en;const endpoint=`/api/patient/skin?patientId=${encodeURIComponent(patientId)}`;
  const [data,setData]=useState<Data|null>(null),[error,setError]=useState(''),[busy,setBusy]=useState(false),[loading,setLoading]=useState(true),[step,setStep]=useState(0),[photos,setPhotos]=useState<(File|null)[]>([null,null,null]),[urls,setUrls]=useState<string[]>([]),[camera,setCamera]=useState(false),[cameraReady,setCameraReady]=useState(false),[storageConsent,setStorageConsent]=useState(false),[aiConsent,setAiConsent]=useState(false),[sessionId,setSessionId]=useState(''),[selected,setSelected]=useState('');
- const video=useRef<HTMLVideoElement>(null),stream=useRef<MediaStream|null>(null);const readOnly=preview||data?.preview;
+ const video=useRef<HTMLVideoElement>(null),stream=useRef<MediaStream|null>(null);const readOnly=data?data.preview:!!preview;
  const load=useCallback(async()=>{setLoading(true);try{const r=await fetch(endpoint,{cache:'no-store'});const b=await r.json();if(!r.ok)throw Error(b.error);setData(b);}catch{setError(arabic?'تعذر تحميل التقييمات. اضغط تحديث.':'Could not load assessments. Please refresh.');}finally{setLoading(false)}},[endpoint,arabic]);
  useEffect(()=>{void load()},[load]);
  useEffect(()=>{const next=photos.map(p=>p?URL.createObjectURL(p):'');setUrls(next);return()=>next.forEach(u=>u&&URL.revokeObjectURL(u));},[photos]);

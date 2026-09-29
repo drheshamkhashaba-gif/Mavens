@@ -11,6 +11,23 @@ export async function POST(request:Request){
  if(!operationalRole(ctx.roles)) return NextResponse.json({error:"FORBIDDEN"},{status:403});
  const body=await request.json().catch(()=>null) as Body|null; if(!body?.action) return NextResponse.json({error:"INVALID_REQUEST"},{status:400});
  const {db,tenantId,clinicId,user}=ctx,now=new Date().toISOString();
+ if(body.action==="link_own_patient"){
+  const origin=request.headers.get("origin");if(origin&&origin!==new URL(request.url).origin)return NextResponse.json({error:"FORBIDDEN_ORIGIN"},{status:403});
+  const assigned=await db.prepare("SELECT role FROM role_assignments WHERE user_id=? AND tenant_id=? AND clinic_id=? AND status='active'").bind(user.id,tenantId,clinicId).all<{role:string}>();
+  if(!assigned.results.some((r:{role:string})=>["clinic_admin","super_admin"].includes(r.role)))return NextResponse.json({error:"ADMIN_REQUIRED"},{status:403});
+  const patientId=String(body.patientId||"");
+  const target=await db.prepare("SELECT id,profile_id FROM patients WHERE id=? AND tenant_id=? AND clinic_id=? AND archived_at IS NULL").bind(patientId,tenantId,clinicId).first<{id:string;profile_id:string|null}>();
+  if(!target)return NextResponse.json({error:"PATIENT_NOT_FOUND"},{status:404});
+  if(target.profile_id&&target.profile_id!==user.id)return NextResponse.json({error:"PATIENT_ALREADY_LINKED"},{status:409});
+  const previous=await db.prepare("SELECT id FROM patients WHERE tenant_id=? AND profile_id=? AND id!=? AND archived_at IS NULL").bind(tenantId,user.id,patientId).first();
+  if(previous)return NextResponse.json({error:"ACCOUNT_ALREADY_LINKED_TO_ANOTHER_PATIENT"},{status:409});
+  const result=await db.batch([
+   db.prepare("UPDATE patients SET profile_id=?,updated_at=? WHERE id=? AND tenant_id=? AND clinic_id=? AND archived_at IS NULL AND (profile_id IS NULL OR profile_id='' OR profile_id=?) AND NOT EXISTS (SELECT 1 FROM patients other WHERE other.tenant_id=? AND other.profile_id=? AND other.id!=? AND other.archived_at IS NULL)").bind(user.id,now,patientId,tenantId,clinicId,user.id,tenantId,user.id,patientId),
+   db.prepare("INSERT INTO audit_logs (id,tenant_id,actor_id,entity_type,entity_id,action,occurred_at,created_at,updated_at) SELECT ?,?,?,'patient',?,'self_account_linked',?,?,? WHERE changes()>0").bind(crypto.randomUUID(),tenantId,user.id,patientId,now,now,now)
+  ]);
+  if(!result[0].meta.changes)return NextResponse.json({error:"LINK_CONFLICT"},{status:409});
+  return NextResponse.json({ok:true});
+ }
  if(body.action==="register_patient"){
   const fullName=String(body.fullName??"").trim(),mobile=String(body.mobile??"").trim(),concern=String(body.concern??"").trim(),goal=String(body.goal??"").trim();
   if(!fullName||!mobile) return NextResponse.json({error:"NAME_AND_MOBILE_REQUIRED"},{status:400});

@@ -1,12 +1,12 @@
 "use client";
 import {useState} from 'react';
 import {skinParameters,descriptiveAverage,type SkinDraft} from '@/lib/skin-assessment';
-export default function SkinReportDashboard({draft,patientId,createdAt,documentId,arabic}:{draft:SkinDraft;patientId:string;createdAt:string;documentId:string;arabic:boolean}){
+export default function SkinReportDashboard({draft,patientId,createdAt,documentId,arabic,imageEndpoint="/api/intake"}:{draft:SkinDraft;patientId:string;createdAt:string;documentId:string;arabic:boolean;imageEndpoint?:string}){
  const t=(ar:string,en:string)=>arabic?ar:en;
  const sources=draft.sources||[{id:documentId,angle:'Unknown',mode:'Unknown'}];
  const [selected,setSelected]=useState(0);
  const source=sources[selected]||sources[0];
- const url=(id:string)=>`/api/intake?patientId=${encodeURIComponent(patientId)}&documentId=${encodeURIComponent(id)}`;
+ const url=(id:string)=>`${imageEndpoint}?patientId=${encodeURIComponent(patientId)}&documentId=${encodeURIComponent(id)}`;
  const average=descriptiveAverage(draft);
  const features=[{id:12,color:'#e8b866'},{id:19,color:'#78c9e4'},{id:7,color:'#ef8989'},{id:27,color:'#bc9be9'}];
  const grade=(value:number|null|undefined)=>value==null?'N/A':`${value*25}%`;

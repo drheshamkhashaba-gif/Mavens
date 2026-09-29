@@ -1,0 +1,69 @@
+name: Deploy mavens to Cloudflare
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [.github/workflows/deploy-cloudflare.yml]
+permissions:
+  contents: read
+concurrency:
+  group: mavens-production-deploy
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: node --test tests/intake-api.test.mjs tests/skin-ai.test.mjs
+      - run: ./node_modules/.bin/vinext build
+      - name: Preserve production bindings and deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: d5ee303013f22cfb7b3b33c8f7bbecc5
+        run: |
+          python3 - <<'PY'
+          import json, os, urllib.request, subprocess
+          from pathlib import Path
+          token=os.environ["CLOUDFLARE_API_TOKEN"].strip()
+          if not token: raise SystemExit("Missing Cloudflare token")
+          os.environ["CLOUDFLARE_API_TOKEN"]=token
+          base="https://api.cloudflare.com/client/v4/accounts/"+os.environ["CLOUDFLARE_ACCOUNT_ID"]+"/workers/scripts/mavens"
+          def get(path):
+              req=urllib.request.Request(base+path,headers={"Authorization":"Bearer "+token})
+              with urllib.request.urlopen(req,timeout=30) as r: data=json.load(r)
+              if not data.get("success"): raise SystemExit("Cloudflare API request failed")
+              return data["result"]
+          settings=get("/settings")
+          bindings=settings.get("bindings",[])
+          supported={"d1","r2_bucket","plain_text","json","secret_text","secret_key","assets"}
+          if any(b["type"] not in supported for b in bindings):
+              raise SystemExit("Unexpected binding type; stopped before deployment")
+          cfg=json.loads(Path("dist/server/wrangler.json").read_text())
+          cfg["name"]="mavens"
+          cfg["account_id"]=os.environ["CLOUDFLARE_ACCOUNT_ID"]
+          cfg["keep_vars"]=True
+          cfg["d1_databases"]=[{"binding":b["name"],"database_name":b["name"],"database_id":b.get("id") or b.get("database_id")} for b in bindings if b["type"]=="d1"]
+          cfg["r2_buckets"]=[dict({"binding":b["name"],"bucket_name":b["bucket_name"]},**({"jurisdiction":b["jurisdiction"]} if b.get("jurisdiction") else {})) for b in bindings if b["type"]=="r2_bucket"]
+          if not any(b["binding"]=="DB" and b["database_id"] for b in cfg["d1_databases"]): raise SystemExit("Production DB binding unavailable")
+          if not any(b["name"]=="OPENAI_API_KEY" and b["type"]=="secret_text" for b in bindings): raise SystemExit("OPENAI_API_KEY runtime secret missing")
+          for key in ["compatibility_date","compatibility_flags","limits","observability","placement"]:
+              if key in settings: cfg[key]=settings[key]
+          cfg["compatibility_flags"]=list(set(cfg.get("compatibility_flags",[])+["nodejs_compat"]))
+          Path("dist/server/wrangler.json").write_text(json.dumps(cfg))
+          # Secrets are retained by Wrangler; keep_vars also retains dashboard variables.
+          subprocess.run(["./node_modules/.bin/wrangler","deploy","--config","dist/server/wrangler.json","--keep-vars"],check=True)
+          deployed=get("/deployments")
+          print("Active Cloudflare deployment:",json.dumps(deployed))
+          after=get("/settings")
+          before={(b["name"],b["type"]) for b in bindings}
+          current={(b["name"],b["type"]) for b in after.get("bindings",[])}
+          if not before.issubset(current): raise SystemExit("Post-deployment binding verification failed")
+          with open(os.environ["GITHUB_STEP_SUMMARY"],"a") as f:
+              f.write("Deployed commit "+os.environ["GITHUB_SHA"]+" to mavens. Production bindings verified.\n\nhttps://mavens.drhesham-khashaba.workers.dev\n")
+          PY

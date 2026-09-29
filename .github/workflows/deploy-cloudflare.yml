@@ -54,6 +54,8 @@ jobs:
           if not any(b["name"]=="OPENAI_API_KEY" and b["type"]=="secret_text" for b in bindings): raise SystemExit("OPENAI_API_KEY runtime secret missing")
           for key in ["compatibility_date","compatibility_flags","limits","observability","placement"]:
               if key in settings: cfg[key]=settings[key]
+          if not cfg.get("placement",{}).get("mode"): cfg.pop("placement",None)
+          cfg.get("observability",{}).pop("redact_query_string",None)
           cfg["compatibility_flags"]=list(set(cfg.get("compatibility_flags",[])+["nodejs_compat"]))
           Path("dist/server/wrangler.json").write_text(json.dumps(cfg))
           # Secrets are retained by Wrangler; keep_vars also retains dashboard variables.

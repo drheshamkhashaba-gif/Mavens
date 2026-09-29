@@ -1,4 +1,5 @@
 "use client";
+import SkinReportDashboard from "./skin-report-dashboard";
 import {useEffect,useState} from 'react';
 import {Button} from '@/components/ui/button';
 import {skinParameters,descriptiveAverage,imageAngles,imageModes,type SkinDraft} from '@/lib/skin-assessment';
@@ -35,6 +36,7 @@ export default function SkinAIAssessment({patientId,images,arabic}:{patientId:st
  {current?.status==='pending'&&<p>{t('الطلب قيد التنفيذ أو انقطع. حدّث النتائج؛ إن لم يكتمل يمكنك المحاولة بعد ٣ دقائق.','Request pending or interrupted. Refresh results; if unfinished, retry after 3 minutes.')}</p>}
  {current?.status==='failed'&&<p className="text-red-700">{explain(current.error_code||'AI_REQUEST_FAILED')}</p>}
  {draft&&<>
+ <SkinReportDashboard key={current.id} draft={draft} patientId={patientId} createdAt={current.created_at} documentId={current.document_id} arabic={arabic}/>
  <p className="whitespace-pre-wrap">{draft.summary}</p><p className="whitespace-pre-wrap text-sm text-amber-900">{draft.limitations}</p>
  <p className="text-sm">{t('الدرجات من ٤: ٠ غير ظاهر في منطقة قابلة للتقييم؛ ١ طفيف؛ ٢ خفيف؛ ٣ متوسط؛ ٤ بارز. N/A = غير قابل للتقييم، وليس صفرًا.','Grades out of 4: 0 not visible in an assessable area; 1 slight; 2 mild; 3 moderate; 4 marked. N/A means not assessable, not zero.')}</p>
  {avg&&<div className="rounded-xl bg-purple-50 p-3"><strong>{t('المتوسط الوصفي: ','Descriptive average: ')}{avg.mean===null?'N/A':`${avg.mean.toFixed(2)}/4 (${avg.normalized!.toFixed(1)}/100)`}</strong><p className="text-sm">{avg.count}/36 {t('بندًا قابلًا للتقييم.','items graded.')} {avg.count>0&&`${avg.sum} / (${avg.count} × 4) × 100`}</p><p className="text-sm">{t('متوسط حسابي غير معتمد طبيًا؛ بعض البنود متداخلة. لا يقيس صحة البشرة أو شدة المرض ولا يُستخدم للمقارنة بين الزيارات أو لاختيار العلاج.','Unvalidated arithmetic average; some items overlap. Not a skin-health or disease-severity score, and not for visit comparisons or treatment selection.')}</p></div>}

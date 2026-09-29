@@ -14,3 +14,32 @@ test('durable save, concurrency, consent, upload roundtrip and access isolation'
 assert.equal((await api.POST(post({data,version:0}))).status,200);assert.equal((await api.POST(post({data,version:0}))).status,409);const bytes=new Uint8Array(600000);bytes.set([137,80,78,71,13,10,26,10]);assert.equal((await api.POST(upload(bytes))).status,409);assert.equal((await api.POST(post({data:{...data,consent:'yes'},version:1}))).status,200);assert.equal((await api.POST(upload(new Uint8Array([1,2,3])))).status,400);assert.equal((await api.POST(upload(bytes))).status,200);
 const saved=await (await api.GET(get())).json();assert.equal(saved.data.email,data.email);assert.equal(saved.documents.length,1);const r=await api.GET(get('p',saved.documents[0].id));assert.deepEqual(new Uint8Array(await r.arrayBuffer()),bytes);assert.equal(r.headers.get('Cache-Control'),'private, no-store');globalThis.__ctx.roles=['doctor'];assert.equal((await api.GET(get())).status,200);assert.equal((await api.POST(post({data,version:2}))).status,403);globalThis.__ctx.roles=['patient'];assert.equal((await api.GET(get())).status,403);globalThis.__ctx={error:'AUTHENTICATION_REQUIRED',status:401};assert.equal((await api.GET(get())).status,401);db.close();});
 test('allowlists and dates',()=>{assert.equal(validateIntake({goal:'invented'}),false);assert.equal(validateIntake({email:'invalid'}),false);assert.equal(validateIntake({travelYear:'2026',travelMonth:'2',travelDay:'31'}),false);assert.equal(validateIntake({consent:'yes',medicationTypes:[intakeOptions.medicationTypes[0]]}),true);assert.equal(validateIntake({arbitrary:'field'}),false);});
+test('document deletion enforces scope and role, removes chunks and audits atomically',async()=>{
+ const db=setup();
+ db.exec("INSERT INTO patients VALUES('p2','t','c',NULL);");
+ for(const [id,p,tenant,clinic,kind] of [['image','p','t','c','image'],['report','p','t','c','report'],['other','p2','t','c','image'],['tenant','p','other','c','image'],['clinic','p','t','other','image']]){
+ db.prepare("INSERT INTO intake_documents VALUES(?,?,?,?,?,?,?,?,?,?,?)").run(id,p,tenant,clinic,kind,'Front',id+'.png','image/png',1,'now','u');
+ db.prepare("INSERT INTO intake_document_chunks VALUES(?,?,?)").run(id,0,new Uint8Array([1]));
+ }
+ const del=(id,headers={})=>api.DELETE(new Request(get('p',id),{method:'DELETE',headers}));
+ globalThis.__ctx.roles=['doctor'];assert.equal((await del('image')).status,403);
+ globalThis.__ctx.roles=['patient'];assert.equal((await del('image')).status,403);
+ globalThis.__ctx.roles=['reception'];
+ assert.equal((await del('image',{origin:'https://evil.example'})).status,403);
+ for(const id of ['other','tenant','clinic','missing'])assert.equal((await del(id)).status,404);
+ assert.equal((await del('')).status,400);
+ assert.equal(db.prepare('SELECT COUNT(*) n FROM intake_documents').get().n,5);
+ assert.equal((await del('image')).status,200);
+ assert.equal((await api.GET(get('p','image'))).status,404);
+ assert.equal(db.prepare("SELECT COUNT(*) n FROM intake_document_chunks WHERE document_id='image'").get().n,0);
+ assert.equal(db.prepare("SELECT COUNT(*) n FROM audit_logs WHERE entity_id='image' AND action='deleted' AND actor_id='u'").get().n,1);
+ assert.equal((await del('image')).status,404);
+ db.exec("CREATE TRIGGER reject_audit BEFORE INSERT ON audit_logs BEGIN SELECT RAISE(ABORT,'test failure'); END;");
+ assert.equal((await del('report')).status,500);
+ assert.equal(db.prepare("SELECT COUNT(*) n FROM intake_document_chunks WHERE document_id='report'").get().n,1);
+ db.exec('DROP TRIGGER reject_audit');
+ assert.equal((await del('report')).status,200);
+ assert.equal(db.prepare('SELECT COUNT(*) n FROM intake_documents').get().n,3);
+ assert.equal(db.prepare('SELECT COUNT(*) n FROM intake_document_chunks').get().n,3);
+ db.close();
+});

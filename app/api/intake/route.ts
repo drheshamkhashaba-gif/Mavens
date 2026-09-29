@@ -40,7 +40,7 @@ export async function POST(request:Request){
  if(!signature)return fail("INVALID_FILE_CONTENT");
  const assessment=await db.prepare("SELECT data_json FROM intake_assessments WHERE patient_id=? AND tenant_id=? AND clinic_id=?").bind(patientId,tenantId,clinicId).first<any>();
  if(!assessment||JSON.parse(assessment.data_json).consent!=='yes')return fail("SAVE_IMAGING_CONSENT_FIRST",409);
- const count=await db.prepare("SELECT COUNT(*) AS n FROM intake_documents WHERE patient_id=?").bind(patientId).first<{n:number}>();if(Number(count?.n)>=20)return fail("MAX_20_DOCUMENTS",409);
+ const count=await db.prepare("SELECT COUNT(*) AS n FROM intake_documents WHERE patient_id=?").bind(patientId).first<{n:number}>();if(Number(count?.n)>=60)return fail("MAX_60_DOCUMENTS",409);
  const id=crypto.randomUUID();const statements=[db.prepare("INSERT INTO intake_documents (id,patient_id,tenant_id,clinic_id,kind,view_type,filename,mime,size,created_at,created_by) VALUES (?,?,?,?,?,?,?,?,?,?,?)").bind(id,patientId,tenantId,clinicId,kind,view,file.name.slice(0,180),file.type,file.size,now,user.id)];
  for(let i=0;i<bytes.length;i+=256*1024)statements.push(db.prepare("INSERT INTO intake_document_chunks (document_id,ordinal,bytes) VALUES (?,?,?)").bind(id,i/(256*1024),buffer.slice(i,i+256*1024)));
  statements.push(db.prepare("INSERT INTO audit_logs (id,tenant_id,actor_id,entity_type,entity_id,action,occurred_at,created_at,updated_at) VALUES (?,?,?,'intake_document',?,'uploaded',?,?,?)").bind(crypto.randomUUID(),tenantId,user.id,id,now,now,now));await db.batch(statements);return NextResponse.json({ok:true});

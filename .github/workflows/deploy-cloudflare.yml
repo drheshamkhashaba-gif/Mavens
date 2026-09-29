@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: [.github/workflows/deploy-cloudflare.yml]
+    paths: ['.github/workflows/deploy-cloudflare.yml', 'app/**', 'lib/**']
 permissions:
   contents: read
 concurrency:

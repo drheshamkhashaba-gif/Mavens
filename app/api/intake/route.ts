@@ -54,3 +54,24 @@ export async function POST(request:Request){
  return NextResponse.json({ok:true,version:body.version+1});
  }catch{return fail("INTAKE_SAVE_FAILED",500);}
 }
+
+export async function DELETE(request:Request){
+ const origin=request.headers.get("origin");if(origin&&origin!==new URL(request.url).origin)return fail("FORBIDDEN_ORIGIN",403);
+ const c=await context(request,true);if(c instanceof Response)return c;
+ const {db,patientId,tenantId,clinicId,user}=c;
+ const id=new URL(request.url).searchParams.get("documentId");
+ if(!id)return fail("DOCUMENT_ID_REQUIRED");
+ const scope="id=? AND patient_id=? AND tenant_id=? AND clinic_id=?";
+ const args=[id,patientId,tenantId,clinicId];
+ try{
+ const d=await db.prepare("SELECT id FROM intake_documents WHERE "+scope).bind(...args).first();
+ if(!d)return fail("NOT_FOUND",404);
+ const now=new Date().toISOString();
+ await db.batch([
+ db.prepare("INSERT INTO audit_logs (id,tenant_id,actor_id,entity_type,entity_id,action,occurred_at,created_at,updated_at) SELECT ?,?,?, 'intake_document',id,'deleted',?,?,? FROM intake_documents WHERE "+scope).bind(crypto.randomUUID(),tenantId,user.id,now,now,now,...args),
+ db.prepare("DELETE FROM intake_document_chunks WHERE document_id IN (SELECT id FROM intake_documents WHERE "+scope+")").bind(...args),
+ db.prepare("DELETE FROM intake_documents WHERE "+scope).bind(...args)
+ ]);
+ return NextResponse.json({ok:true});
+ }catch{return fail("INTAKE_DELETE_FAILED",500);}
+}

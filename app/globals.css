@@ -139,3 +139,119 @@ body {
 
 button, a, input, textarea { outline-offset: 3px; }
 ::selection { background: #ead8ed; color: #30364d; }
+
+/* Patient Skin Passport — warm ivory, charcoal and understated gold. */
+.patient-experience { background:#eae6df!important; color:#37342e; }
+.patient-experience > header { background:#2d2c28!important; border-color:#514b40; color:#eee8db; position:relative; }
+.patient-experience > header > div { height:70px; }
+.patient-experience > header .text-slate-500 { color:#8c8478; }
+.patient-experience > header .bg-purple-950 { background:#514b40; }
+.patient-experience > header .bg-purple-100 { background:#e8dfcf; color:#423b30; }
+.patient-experience > header .text-purple-950 { color:#d4c19e; }
+.patient-experience > header .text-violet-600,.patient-experience > header .text-purple-600 { color:#d4c19e; }
+.patient-experience > footer { color:#777165; padding-bottom:100px; }
+.skin-passport,.passport-dialog { --primary:#3c3932; --primary-foreground:#fffaf1; --secondary:#eae3d8; --secondary-foreground:#453f34; --muted:#eee9e1; --muted-foreground:#756e62; --accent:#e7ddcc; --accent-foreground:#39362f; --border:#dbd4c8; --ring:#9f8b65; color:#39362f; }
+.skin-passport { padding-top:0; }
+.passport-hero { background:linear-gradient(120deg,#373630,#252520);color:#f5efe4; padding:32px 28px 50px; margin:0 -16px; border-radius:0 0 28px 28px; }
+.passport-eyebrow,.passport-section-label { font-size:10px; letter-spacing:.16em; color:#a79169; font-weight:600; }
+.passport-hero>h1 { font-family:Georgia,'Times New Roman',serif; font-weight:400;font-size:clamp(28px,4vw,42px); line-height:1.2; margin-top:12px; }
+.passport-hero>p { color:#c5beb0;font-size:14px;margin-top:10px; }
+.passport-welcome { display:flex;align-items:center;gap:12px;margin-top:26px; }
+.passport-avatar { display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:#d5c6ae;color:#3b352b;border:3px solid #706554;font-size:17px;flex-shrink:0; }
+.passport-welcome small {color:#c5beb0;font-size:11px;}
+.passport-welcome h2 {font-size:19px;font-weight:500;}
+.passport-inbox {margin-inline-start:auto;display:flex;align-items:center;gap:6px;border:1px solid #625b4e;border-radius:50%;padding:12px;cursor:pointer;}
+.passport-inbox span {font-size:10px;}
+.skin-passport [data-slot="tabs-list"]:not(.passport-bottom-nav) {background:#f6f2eb;border-color:#d9d1c3;border-radius:14px;}
+.skin-passport [data-slot="tabs-trigger"] {color:#746b5e;gap:6px;}
+.skin-passport [data-slot="tabs-trigger"][data-state="active"],.skin-passport [data-slot="tabs-trigger"][data-active] {background:#e5dccd;color:#37342d;box-shadow:none;}
+.passport-dashboard {display:grid;grid-template-columns:1.15fr 1fr;gap:20px;align-items:start;}
+.passport-card {background:#faf7f1;border:1px solid #dcd5c9;border-radius:22px;padding:24px;box-shadow:0 5px 22px #342c1d05;}
+.passport-card h2 {font-size:20px;font-weight:500;line-height:1.4;}
+.passport-program {display:flex;align-items:center;gap:12px;padding-bottom:20px;border-bottom:1px solid #e0d9cc;}
+.passport-program h2 {font-size:17px;}
+.passport-program p {font-size:11px;color:#756b5b;margin-top:5px;}
+.passport-icon {width:42px;height:42px;display:grid;place-items:center;flex-shrink:0;border-radius:50%;background:#eae2d5;color:#837052;}
+.passport-tag {margin-inline-start:auto;padding:5px 9px;background:#e9e1d4;border-radius:8px;font-size:10px;white-space:nowrap;}
+.passport-progress {padding:23px 0;}
+.passport-progress>div:first-child {display:flex;justify-content:space-between;align-items:center;font-size:13px;margin-bottom:15px;}
+.passport-progress [data-slot="progress"] {height:5px;background:#ded5c5;}
+.passport-progress [data-slot="progress-indicator"] {background:#8c7956;}
+.passport-progress p {color:#8b8273;font-size:10px;margin-top:10px;}
+.passport-overview {border:1px solid #ded6c8;border-radius:15px;padding:0 15px;}
+.passport-overview>button {display:flex;gap:12px;align-items:center;width:100%;padding:17px 0;text-align:start;cursor:pointer;}
+.passport-overview>button+button {border-top:1px solid #e4ddd2;}
+.passport-overview svg {width:19px;color:#887b64;flex-shrink:0;}
+.passport-overview span {flex:1;}
+.passport-overview small {display:block;font-size:11px;color:#7b7265;margin-bottom:4px;}
+.passport-overview strong {font-size:13px;font-weight:500;display:block;}
+.passport-overview .passport-chevron {width:15px;}
+[dir="rtl"] .passport-chevron {transform:rotate(180deg);}
+.passport-quick-actions {display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:18px 0;}
+.passport-quick-actions button {display:flex;flex-direction:column;align-items:center;gap:8px;font-size:10px;padding:12px 4px;cursor:pointer;border-radius:10px;}
+.passport-quick-actions button:hover {background:#eee7db;}
+.passport-quick-actions svg {width:20px;height:20px;color:#85755b;}
+.passport-next {width:100%;justify-content:space-between;min-height:44px;border-radius:10px;}
+.passport-side {display:grid;gap:18px;}
+.passport-highlights h2 {font-family:Georgia,'Times New Roman',serif;font-size:25px;margin:9px 0;}
+.passport-highlights p,.passport-capture-card p {font-size:13px;line-height:1.7;color:#7c7262;}
+.passport-measures {margin:18px 0 12px;}
+.passport-measures>div {display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid #e5ddd0;font-size:12px;}
+.passport-measures strong {font-size:21px;font-weight:400;color:#736346;}
+.passport-highlights>small {font-size:10px;color:#807665;}
+.passport-text-link {display:flex;align-items:center;gap:6px;margin-top:18px;font-size:12px;background:#eae2d5;padding:9px 13px;border-radius:8px;cursor:pointer;}
+.passport-capture-card {background:#393830;color:#f5efe4;border-radius:22px;padding:24px;}
+.passport-capture-card>svg {color:#bca983;margin-bottom:14px;}
+.passport-capture-card h2 {font-family:Georgia,'Times New Roman',serif;font-size:23px;font-weight:400;}
+.passport-capture-card p {color:#c3baaa;margin:10px 0 18px;}
+.passport-capture-card [data-slot="button"] {background:#e7ddcb;color:#3b362c;width:100%;justify-content:space-between;}
+.passport-tasks {margin-top:20px;}
+.passport-tasks h2 {margin-top:8px;}
+.passport-reminder {display:flex;align-items:flex-start;gap:12px;padding:17px 0;border-bottom:1px solid #e2dacd;font-size:13px;line-height:1.7;}
+.passport-reminder>svg {color:#9e8862;flex-shrink:0;margin-top:3px;}
+.passport-reminder small {color:#8a7e6b;font-size:10px;}
+.passport-appointment {display:flex;gap:14px;padding:18px;background:#eee8dd;border-radius:15px;align-items:center;}
+.passport-appointment h3 {font-size:15px;font-weight:500;}
+.passport-appointment p {font-size:13px;margin-top:5px;}
+.passport-appointment small {display:block;font-size:11px;color:#83745c;margin-top:6px;}
+.passport-support-links {display:flex;justify-content:center;gap:24px;margin-top:25px;}
+.passport-support-links button {display:flex;align-items:center;gap:7px;font-size:12px;color:#756951;cursor:pointer;}
+.skin-passport .text-purple-950,.skin-passport .text-purple-800,.skin-passport .text-purple-700,.skin-passport .text-purple-600,.skin-passport .text-purple-500 {color:#746141;}
+.skin-passport .text-purple-200 {color:#e3d8c3;}
+.skin-passport .bg-purple-950 {background:#3c3932;}
+.skin-passport .bg-purple-100,.skin-passport .bg-purple-50 {background:#eee6d8;}
+.skin-passport .bg-white {background:#faf7f1;}
+.skin-passport .bg-slate-50,.skin-passport .bg-slate-100 {background:#eee9e0;}
+.skin-passport .text-slate-500,.skin-passport .text-slate-600 {color:#776f62;}
+.skin-passport .border-purple-700,.skin-passport .border-purple-600 {border-color:#9a835b;}
+.skin-passport section.rounded-3xl,.skin-passport section.rounded-\[2rem\] {border-color:#dbd4c8;border-radius:22px;}
+.skin-passport button:focus-visible,.passport-dialog button:focus-visible {outline:2px solid #91794e;outline-offset:3px;}
+.skin-passport .passport-bottom-nav {display:none;}
+.passport-dialog {background:#faf7f1;border-color:#d8cdb9;}
+@media(min-width:640px){.passport-hero {margin:0;padding:35px 36px 40px;}}
+@media(max-width:767px){
+ .patient-experience > header > div {height:58px;padding-inline:16px;}
+ .patient-experience > header > div > div:last-child > div:last-child,.patient-experience > header button:has(.lucide-bell) {display:none;}
+ .passport-hero {padding:24px 24px 39px;}
+ .passport-hero>h1 {font-size:29px;}
+ .passport-hero>p {font-size:12px;}
+ .passport-dashboard {grid-template-columns:1fr;gap:15px;}
+ .skin-passport > [data-slot="tabs"] {margin-top:-17px;position:relative;}
+ .passport-card {padding:20px;border-radius:19px;}
+ .passport-side {gap:15px;}
+ .skin-passport .passport-bottom-nav {position:fixed;inset-inline:12px;bottom:max(12px,env(safe-area-inset-bottom));z-index:40;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));height:66px;border:1px solid #d9d0c0;background:#faf7f1f5;border-radius:18px;padding:6px;box-shadow:0 8px 35px #28201124;backdrop-filter:blur(14px);}
+ .skin-passport .passport-bottom-nav [data-slot="tabs-trigger"] {flex-direction:column;gap:5px;padding:7px 2px;font-size:10px;border-radius:12px;min-width:0;}
+ .passport-bottom-nav svg {width:18px;height:18px;}
+ .passport-support-links {gap:18px;}
+ .skin-passport [data-slot="button"] {white-space:normal;height:auto;min-height:36px;}
+}
+.passport-wordmark {font-family:Georgia,'Times New Roman',serif;color:#dbcaa8;font-size:23px;line-height:1.1;text-align:center;}
+.passport-wordmark small {display:block;font-family:Arial,sans-serif;font-size:8px;letter-spacing:.19em;margin-top:5px;}
+.passport-stage-dots {display:flex;justify-content:space-between;position:relative;margin:15px 2px 0;}
+.passport-stage-dots::before {content:"";position:absolute;top:5px;inset-inline:0;height:1px;background:#d3c7b3;}
+.passport-stage-dots span {position:relative;width:11px;height:11px;border:1px solid #b7a88d;border-radius:50%;background:#faf7f1;}
+.passport-stage-dots .is-current {background:#766243;border-color:#766243;box-shadow:0 0 0 3px #e8dfd0;}
+.skin-passport .passport-bottom-nav {width:auto;}
+.skin-passport .bg-slate-950 {background:#292923;}
+.skin-passport video {background:#292923;}
+@media(max-width:420px){.passport-tag {display:none;}.passport-program h2{font-size:15px;}.passport-hero{padding-inline:21px;}.passport-hero>h1{font-size:27px;}}

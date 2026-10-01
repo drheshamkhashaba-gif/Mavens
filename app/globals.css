@@ -257,16 +257,16 @@ button, a, input, textarea { outline-offset: 3px; }
 @media(max-width:420px){.passport-tag {display:none;}.passport-program h2{font-size:15px;}.passport-hero{padding-inline:21px;}.passport-hero>h1{font-size:27px;}}
 
 /* Physician workspace: ivory counterpart to the charcoal reference screens. */
-.doctor-workspace { --background:#fffefa; --foreground:#292c2b; --primary:#766039; --primary-foreground:#fff; --border:#ddd9cd; --muted:#f3f1e9; --muted-foreground:#62655f; --accent:#eee6d5; --accent-foreground:#493d26; color:#292c2b; background:#f7f6f0; border-radius:24px; }
-.doctor-workspace [class*="text-purple-"] {color:#493d26}
-.doctor-workspace [class*="bg-purple-950"] {background:#766039;color:white}
-.doctor-workspace [class*="bg-purple-50"],.doctor-workspace [class*="bg-purple-100"] {background:#eee6d5}
-.doctor-workspace [class*="bg-slate-50"] {background:#f5f4ed}
-.doctor-workspace [class*="text-slate-400"] {color:#72756d}
-.doctor-workspace [class*="rounded-3xl"] {border-radius:18px;border-color:#ddd9cd;box-shadow:0 3px 14px #33321c04}
-.doctor-workspace h1 {font-family:Georgia,serif;letter-spacing:-.025em}
-.doctor-workspace button {transition:background .18s,box-shadow .18s}
-.doctor-workspace button:focus-visible {outline:2px solid #8c713f;outline-offset:3px}
+:is(.doctor-workspace,.clinical-workspace) { --background:#fffefa; --foreground:#292c2b; --primary:#766039; --primary-foreground:#fff; --border:#ddd9cd; --muted:#f3f1e9; --muted-foreground:#62655f; --accent:#eee6d5; --accent-foreground:#493d26; color:#292c2b; background:#f7f6f0; border-radius:24px; }
+:is(.doctor-workspace,.clinical-workspace) [class*="text-purple-"] {color:#493d26}
+:is(.doctor-workspace,.clinical-workspace) [class*="bg-purple-950"] {background:#766039;color:white}
+:is(.doctor-workspace,.clinical-workspace) [class*="bg-purple-50"],:is(.doctor-workspace,.clinical-workspace) [class*="bg-purple-100"] {background:#eee6d5}
+:is(.doctor-workspace,.clinical-workspace) [class*="bg-slate-50"] {background:#f5f4ed}
+:is(.doctor-workspace,.clinical-workspace) [class*="text-slate-400"] {color:#72756d}
+:is(.doctor-workspace,.clinical-workspace) [class*="rounded-3xl"] {border-radius:18px;border-color:#ddd9cd;box-shadow:0 3px 14px #33321c04}
+:is(.doctor-workspace,.clinical-workspace) h1 {font-family:Georgia,serif;letter-spacing:-.025em}
+:is(.doctor-workspace,.clinical-workspace) button {transition:background .18s,box-shadow .18s}
+:is(.doctor-workspace,.clinical-workspace) button:focus-visible {outline:2px solid #8c713f;outline-offset:3px}
 .clinical-summary {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:24px 0}
 .clinical-stat {padding:21px 24px;background:#fffefa;border:1px solid #dedbce;border-radius:16px;display:flex;flex-direction:column;gap:9px}
 .clinical-stat>span {font-size:13px;color:#62655f}.clinical-stat strong{font:36px Georgia,serif;color:#57482c}.clinical-stat small{font-size:11px;color:#72756d}
@@ -277,9 +277,9 @@ button, a, input, textarea { outline-offset: 3px; }
 .clinical-monogram{height:56px;width:56px;flex-shrink:0;border-radius:50%;display:grid;place-items:center;background:#eee6d5;color:#74603a;font:26px Georgia,serif}
 .clinical-patient-header p,.clinical-section-heading p{font-size:10px;letter-spacing:.12em;color:#80683d;margin-bottom:6px}.clinical-patient-header h2{font-size:22px;font-weight:600}.clinical-patient-header span{font-size:12px;color:#65695f}
 .clinical-patient-status{margin-inline-start:auto;display:flex;flex-direction:column;gap:10px;align-items:flex-end}
-.doctor-workspace [role="tablist"] {border:1px solid #dedbce;border-radius:12px;gap:3px;box-shadow:none;width:100%;margin-bottom:6px}
-.doctor-workspace [role="tab"] {padding:10px 13px;color:#63665e;border-radius:8px}
-.doctor-workspace [role="tab"][data-state="active"] {background:#eee6d5;color:#594629;box-shadow:none}
+:is(.doctor-workspace,.clinical-workspace) [role="tablist"] {border:1px solid #dedbce;border-radius:12px;gap:3px;box-shadow:none;width:100%;margin-bottom:6px}
+:is(.doctor-workspace,.clinical-workspace) [role="tab"] {padding:10px 13px;color:#63665e;border-radius:8px}
+:is(.doctor-workspace,.clinical-workspace) [role="tab"][data-state="active"] {background:#eee6d5;color:#594629;box-shadow:none}
 .clinical-journey{background:#fffefa;border:1px solid #ddd9cd;border-radius:18px;padding:24px}
 .clinical-section-heading{display:flex;justify-content:space-between;align-items:center;gap:16px}.clinical-section-heading h3{font-size:20px;font-family:Georgia,serif}
 .clinical-journey ol{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));list-style:none;margin:28px 0 8px;padding:0;gap:8px}
@@ -288,12 +288,23 @@ button, a, input, textarea { outline-offset: 3px; }
 .clinical-journey li.is-current>span{background:#8b7040;border-color:#8b7040;color:white;box-shadow:0 0 0 5px #eee6d5}.clinical-journey li.is-current strong{color:#69522b}.clinical-journey li small{font-size:10px;color:#80683d}
 .clinical-plan-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.clinical-plan-grid>div{border:1px solid #ddd9cd;background:#fffefa!important;line-height:1.7}
 /* Preserve original clinical photographs; invert only report surfaces and text. */
-.doctor-workspace article[class*="bg-[#181c20]"]{background:#fffefa;color:#292c2b;border-color:#ddd9cd;box-shadow:none}
-.doctor-workspace article [class*="text-[#"]{color:#62655f}
-.doctor-workspace article [class*="text-[#e7be77]"],.doctor-workspace article [class*="text-[#e5d2ac]"]{color:#806338}
-.doctor-workspace article [class*="border-white/"]{border-color:#dedbce}
-.doctor-workspace article [class*="bg-[#101315]"]{background:#eeede6}
-.doctor-workspace article [class*="bg-white/"]{background:#e9e7dd}
-.doctor-workspace article strong[style]{color:#57482c!important}
+:is(.doctor-workspace,.clinical-workspace) article[class*="bg-[#181c20]"]{background:#fffefa;color:#292c2b;border-color:#ddd9cd;box-shadow:none}
+:is(.doctor-workspace,.clinical-workspace) article [class*="text-[#"]{color:#62655f}
+:is(.doctor-workspace,.clinical-workspace) article [class*="text-[#e7be77]"],:is(.doctor-workspace,.clinical-workspace) article [class*="text-[#e5d2ac]"]{color:#806338}
+:is(.doctor-workspace,.clinical-workspace) article [class*="border-white/"]{border-color:#dedbce}
+:is(.doctor-workspace,.clinical-workspace) article [class*="bg-[#101315]"]{background:#eeede6}
+:is(.doctor-workspace,.clinical-workspace) article [class*="bg-white/"]{background:#e9e7dd}
+:is(.doctor-workspace,.clinical-workspace) article strong[style]{color:#57482c!important}
 @media(max-width:900px){.clinical-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.clinical-plan-grid{grid-template-columns:1fr}.clinical-worklist{max-height:330px}.clinical-journey ol{grid-template-columns:repeat(4,minmax(0,1fr));row-gap:22px}}
-@media(max-width:540px){.clinical-stat{padding:15px}.clinical-stat strong{font-size:28px}.clinical-patient-header{flex-wrap:wrap;padding:16px}.clinical-patient-status{margin-inline-start:0;width:100%;align-items:flex-start}.clinical-journey{padding:16px}.clinical-section-heading{align-items:flex-start;flex-direction:column}.clinical-journey ol{grid-template-columns:repeat(3,minmax(0,1fr))}.doctor-workspace [role="tab"]{font-size:12px;padding:8px}.doctor-workspace h1{font-size:26px}}
+@media(max-width:540px){.clinical-stat{padding:15px}.clinical-stat strong{font-size:28px}.clinical-patient-header{flex-wrap:wrap;padding:16px}.clinical-patient-status{margin-inline-start:0;width:100%;align-items:flex-start}.clinical-journey{padding:16px}.clinical-section-heading{align-items:flex-start;flex-direction:column}.clinical-journey ol{grid-template-columns:repeat(3,minmax(0,1fr))}:is(.doctor-workspace,.clinical-workspace) [role="tab"]{font-size:12px;padding:8px}:is(.doctor-workspace,.clinical-workspace) h1{font-size:26px}}
+
+/* Reception shares the physician workspace palette and component treatment. */
+.admin-summary>div{padding:21px 24px;background:#fffefa;border-color:#dedbce;border-radius:16px}
+.admin-summary .text-2xl{font:36px Georgia,serif;color:#57482c}
+.admin-summary svg{color:#8b7040}
+:is(.doctor-workspace,.clinical-workspace) [class*="bg-white"]:not(article):not(article *){background-color:#fffefa}
+:is(.doctor-workspace,.clinical-workspace) [role="tab"][data-state="active"]{background:#eee6d5}
+.clinical-workspace [class*="rounded-2xl"]{border-color:#ddd9cd}
+.clinical-workspace [data-slot="progress-indicator"]{background:#8b7040}
+.clinical-workspace [data-slot="progress"]{background:#eee6d5}
+@media(max-width:540px){.admin-summary>div{padding:15px}.admin-summary .text-2xl{font-size:28px}}
